@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Verify ownership of the subcollection
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Fetch incoming and existing records safely
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Schema Validation Helpers
+    function isValidActivity(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.iconName is string && data.iconName.size() <= 100
+        && data.color is string && data.color.size() <= 50
+        && data.isCustom is bool;
+    }
+
+    function isValidActivityLog(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.activityId is string && data.activityId.size() <= 128
+        && data.activityName is string && data.activityName.size() > 0 && data.activityName.size() <= 100
+        && data.iconName is string && data.iconName.size() <= 100
+        && data.color is string && data.color.size() <= 50
+        && data.timestamp is string && data.timestamp.size() <= 50
+        && data.dateTimeStr is string && data.dateTimeStr.size() <= 50
+        && data.notes is string && data.notes.size() <= 5000;
+    }
+
+    // Route matches
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) && isValidId(userId);
+
+      match /activities/{activityId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) 
+          && isValidId(activityId) 
+          && isValidActivity(incoming())
+          && incoming().id == activityId;
+        allow update: if isOwner(userId) 
+          && isValidId(activityId)
+          && isValidActivity(incoming())
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'iconName', 'color'])
+          );
+        allow delete: if isOwner(userId);
+      }
+
+      match /logs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) 
+          && isValidId(logId) 
+          && isValidActivityLog(incoming())
+          && incoming().id == logId;
+        allow update: if isOwner(userId) 
+          && isValidId(logId)
+          && isValidActivityLog(incoming())
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'dateTimeStr', 'timestamp'])
+          );
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

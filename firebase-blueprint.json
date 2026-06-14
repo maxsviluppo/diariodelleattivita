@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "Activity": {
+      "title": "Activity",
+      "description": "An activity configured by the user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "iconName": { "type": "string" },
+        "color": { "type": "string" },
+        "isCustom": { "type": "boolean" }
+      },
+      "required": ["id", "name", "iconName", "color", "isCustom"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "A diary log entry for a tracked activity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "activityId": { "type": "string" },
+        "activityName": { "type": "string" },
+        "iconName": { "type": "string" },
+        "color": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "dateTimeStr": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "activityId", "activityName", "iconName", "color", "timestamp", "dateTimeStr", "notes"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "Collection of activities custom or preset for the user"
+    },
+    "/users/{userId}/logs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Collection of tracked activity log occurrences"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-sleek-light: #fdf2f8;
+  --color-sleek-dark: #fbcfe8;
+  --color-sleek-accent: #ec4899;
+  --color-sleek-text: #4d0426;
+  --color-sleek-text-muted: #7d1c47;
+}
+
+/* Define a global layout helper for the Sleek central radiant background */
+body {
+  background: radial-gradient(circle at center, var(--color-sleek-light) 0%, var(--color-sleek-dark) 100%);
+  color: var(--color-sleek-text);
+  min-height: 100vh;
+}
+
+/* Prevent mobile browser layout zoom on input focus (safeguard for iOS/iPadOS Safari) */
+@media (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
