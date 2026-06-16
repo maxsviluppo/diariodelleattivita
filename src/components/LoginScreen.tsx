@@ -340,7 +340,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full h-11 mt-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 active:scale-98 text-white text-xs font-black uppercase tracking-wider shadow-md shadow-pink-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full h-11 mt-2 rounded-xl bg-pink-600 hover:bg-pink-700 active:bg-pink-800 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-pink-200/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border border-pink-700/20"
             id="login-submit-btn"
           >
             {isLoading ? (

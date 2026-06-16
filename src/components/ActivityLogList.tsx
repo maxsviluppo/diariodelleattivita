@@ -142,19 +142,14 @@ export default function ActivityLogList({
 
   return (
     <div className="bg-white rounded-[32px] p-6 shadow-md border border-pink-50/70" id="diario-logs-section">
-      <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-sleek-text flex items-center gap-2">
-            <span>Diario delle Attività</span>
-            {logs.length > 0 && (
-              <span className="text-xs bg-sleek-accent/15 text-sleek-accent font-bold px-2.5 py-0.5 rounded-full border border-sleek-accent/10">
-                {sortedLogs.length} {sortedLogs.length === logs.length ? "registrate" : `di ${logs.length}`}
-              </span>
-            )}
-          </h2>
-          <p className="text-xs text-sleek-text-muted mt-0.5">
-            Traccia le tue note mentali, l'orario preciso e gestisci lo storico delle attività.
-          </p>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-2 font-bold" id="activity-logs-count-container">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-sleek-accent">Registrazioni</span>
+          {logs.length > 0 && (
+            <span className="text-xs bg-sleek-accent/15 text-sleek-accent font-black px-2.5 py-0.5 rounded-full border border-sleek-accent/10" id="activity-logs-count-badge">
+              {sortedLogs.length} {sortedLogs.length === logs.length ? "totale" : `di ${logs.length}`}
+            </span>
+          )}
         </div>
 
         {/* Search & Select dropdown filter block if logs exist */}
