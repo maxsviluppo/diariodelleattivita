@@ -1,20 +1,26 @@
 import React, { useState } from "react";
-import { ActivityLog } from "../types";
+import { Activity, ActivityLog } from "../types";
 import IconRenderer from "./IconRenderer";
 import { PRESET_ICONS, PASTEL_COLORS } from "../data";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, Calendar, Trash2, Edit2, Check, FileText, ArrowUpDown, X } from "lucide-react";
+import { Search, Calendar, Trash2, Edit2, Check, FileText, ArrowUpDown, X, Bell } from "lucide-react";
 
 interface ActivityLogListProps {
   logs: ActivityLog[];
+  activities: Activity[];
   onUpdateLog: (id: string, updatedFields: Partial<ActivityLog>) => void;
   onDeleteLog: (id: string) => void;
+  onToggleReminder: (log: ActivityLog) => void;
+  onEditReminder?: (log: ActivityLog) => void;
 }
 
 export default function ActivityLogList({
   logs,
+  activities,
   onUpdateLog,
   onDeleteLog,
+  onToggleReminder,
+  onEditReminder,
 }: ActivityLogListProps) {
   const [filterQuery, setFilterQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -46,6 +52,28 @@ export default function ActivityLogList({
       const minuti = String(d.getMinutes()).padStart(2, "0");
 
       return `${giornoSettimana}, ${giornoMese} ${mese} - ${ore}:${minuti}`;
+    } catch {
+      return isoString;
+    }
+  };
+
+  // Format Helper for rendering deadline/reminder dates without time
+  const formatItalianDateOnly = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+
+      const giorni = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
+      const mesi = [
+        "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", 
+        "Lug", "Ago", "Set", "Ott", "Nov", "Dic"
+      ];
+
+      const giornoSettimana = giorni[d.getDay()];
+      const giornoMese = d.getDate();
+      const mese = mesi[d.getMonth()];
+
+      return `${giornoSettimana} ${giornoMese} ${mese}`;
     } catch {
       return isoString;
     }
@@ -319,6 +347,7 @@ export default function ActivityLogList({
                     return sortedLogs.map((log) => {
                       const isEditingTime = editingLogId === log.id;
                       const colorConfig = PASTEL_COLORS.find((c) => c.id === log.color) || PASTEL_COLORS[0];
+                      const activity = activities.find((a) => a.id === log.activityId);
 
                       // Parse year-month label for visual grouping separators
                       let currentMonthLabel = "";
@@ -383,44 +412,85 @@ export default function ActivityLogList({
 
                             {/* Date & Time */}
                             <td className="py-2.5 px-2 text-xs">
-                              {isEditingTime ? (
-                                <div className="flex items-center gap-1 min-w-[170px]">
-                                  <input
-                                    type="datetime-local"
-                                    value={tempDateTime}
-                                    onChange={(e) => setTempDateTime(e.target.value)}
-                                    className="px-1.5 py-1 rounded-lg border border-pink-200 text-base sm:text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sleek-accent bg-white text-sleek-text"
-                                    id={`datetime-input-${log.id}`}
-                                  />
-                                  <div className="flex gap-1">
-                                    <button
-                                      onClick={() => saveDateTimeEdit(log.id)}
-                                      className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors cursor-pointer"
-                                      title="Salva Data"
-                                    >
-                                      <Check className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => setEditingLogId(null)}
-                                      className="p-1 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg transition-colors cursor-pointer"
-                                      title="Annulla"
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-sleek-text-muted font-bold">
-                                  <span 
-                                    onClick={() => startEditingDateTime(log)}
-                                    className="hover:text-sleek-accent cursor-pointer transition-colors border-b border-dashed border-pink-200 hover:border-sleek-accent pb-0.5 inline-block text-xs font-bold"
-                                    title="Clicca per modificare data/ora"
-                                    id={`display-time-${log.id}`}
+                              <div className="flex items-center gap-2">
+                                {activity && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      onToggleReminder(log);
+                                    }}
+                                    className="focus:outline-none cursor-pointer shrink-0"
+                                    id={`desktop-toggle-reminder-btn-${log.id}`}
+                                    title={log.reminderEnabled ? "Disattiva promemoria" : "Attiva promemoria"}
                                   >
-                                    {formatItalianDate(log.timestamp)}
-                                  </span>
+                                    {/* Modern iOS-style capsule toggle switch, no text */}
+                                    <div className={`w-8 h-5 rounded-full p-0.5 transition-all duration-300 border flex items-center ${
+                                      log.reminderEnabled 
+                                        ? "bg-gradient-to-r from-pink-500 to-rose-450 border-pink-400 shadow-sm shadow-pink-200/50" 
+                                        : "bg-slate-200 border-slate-300 shadow-inner"
+                                    }`}>
+                                      <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${
+                                        log.reminderEnabled ? "translate-x-3.5" : "translate-x-0"
+                                      }`} />
+                                    </div>
+                                  </button>
+                                )}
+
+                                <div className="flex-1">
+                                  {isEditingTime ? (
+                                    <div className="flex items-center gap-1 min-w-[170px]">
+                                      <input
+                                        type="datetime-local"
+                                        value={tempDateTime}
+                                        onChange={(e) => setTempDateTime(e.target.value)}
+                                        className="px-1.5 py-1 rounded-lg border border-pink-200 text-base sm:text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sleek-accent bg-white text-sleek-text"
+                                        id={`datetime-input-${log.id}`}
+                                      />
+                                      <div className="flex gap-1">
+                                        <button
+                                          onClick={() => saveDateTimeEdit(log.id)}
+                                          className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors cursor-pointer"
+                                          title="Salva Data"
+                                        >
+                                          <Check className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingLogId(null)}
+                                          className="p-1 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg transition-colors cursor-pointer"
+                                          title="Annulla"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="flex flex-col gap-0.5">
+                                      <div className="flex items-center gap-1 text-sleek-text-muted font-bold">
+                                        <span 
+                                          onClick={() => startEditingDateTime(log)}
+                                          className="hover:text-sleek-accent cursor-pointer transition-colors border-b border-dashed border-pink-200 hover:border-sleek-accent pb-0.5 inline-block text-xs font-bold"
+                                          title="Clicca per modificare data/ora"
+                                          id={`display-time-${log.id}`}
+                                        >
+                                          {formatItalianDate(log.timestamp)}
+                                        </span>
+                                      </div>
+                                      {log.reminderEnabled && log.reminderDate && (
+                                        <div 
+                                          onClick={() => onEditReminder?.(log)}
+                                          className="flex items-center gap-1 mt-0.5 text-[9px] font-black text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-100/60 px-1.5 py-0.5 rounded-md w-fit font-sans animate-pulse cursor-pointer transition-all hover:scale-102 active:scale-98"
+                                          title="Clicca per modificare la scadenza"
+                                        >
+                                          <Bell className="w-2.5 h-2.5 text-rose-500" />
+                                          <span>Scadenza: {formatItalianDateOnly(log.reminderDate)}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </td>
 
                             {/* Note Field (Direct Inline Input) */}
@@ -432,7 +502,7 @@ export default function ActivityLogList({
                                   value={log.notes}
                                   onChange={(e) => handleNoteChange(log.id, e.target.value)}
                                   placeholder="Aggiungi una nota..."
-                                  className="w-full pl-7 pr-2 py-1.5 text-base sm:text-xs font-bold rounded-lg bg-transparent border border-transparent hover:border-pink-200 focus:border-sleek-accent/40 hover:bg-white/40 focus:bg-white focus:outline-none text-sleek-text placeholder-pink-700/35 focus:ring-1 focus:ring-pink-100 transition-all"
+                                  className="w-full pl-7 pr-2 py-1.5 text-[11px] sm:text-[10px] font-bold rounded-lg bg-transparent border border-transparent hover:border-pink-200 focus:border-sleek-accent/40 hover:bg-white/40 focus:bg-white focus:outline-none text-sleek-text placeholder-pink-700/35 focus:ring-1 focus:ring-pink-100 transition-all font-sans"
                                   id={`notes-input-${log.id}`}
                                 />
                               </div>
@@ -440,7 +510,7 @@ export default function ActivityLogList({
 
                             {/* Actions */}
                             <td className="py-2.5 px-2 text-right">
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-2">
                                 {/* Edit Date toggle */}
                                 <button
                                   onClick={() => startEditingDateTime(log)}
@@ -480,6 +550,7 @@ export default function ActivityLogList({
                 return sortedLogs.map((log) => {
                   const isEditingTime = editingLogId === log.id;
                   const colorConfig = PASTEL_COLORS.find((c) => c.id === log.color) || PASTEL_COLORS[0];
+                  const activity = activities.find((a) => a.id === log.activityId);
 
                   // Parse year-month label for visual grouping separators
                   let currentMonthLabel = "";
@@ -534,7 +605,7 @@ export default function ActivityLogList({
                           </div>
 
                           {/* Actions */}
-                          <div className="flex items-center gap-0.5 shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0">
                             <button
                               onClick={() => startEditingDateTime(log)}
                               className="p-1.5 text-sleek-text-muted hover:text-sleek-accent hover:bg-sleek-light rounded-lg transition-all cursor-pointer"
@@ -554,59 +625,98 @@ export default function ActivityLogList({
                           </div>
                         </div>
 
-                        {/* Row 2: Left (Orario) / Right (Note) */}
+                        {/* Row 2: Date selection & Reminder Toggle */}
                         <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-pink-50/60 font-medium font-sans">
-                          {/* Date selection or visualization */}
-                          <div className="text-[11px] shrink-0">
-                            {isEditingTime ? (
-                              <div className="flex items-center gap-1">
-                                <input
-                                  type="datetime-local"
-                                  value={tempDateTime}
-                                  onChange={(e) => setTempDateTime(e.target.value)}
-                                  className="px-1.5 py-1 rounded-md border border-pink-200 text-base sm:text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-sleek-accent bg-white text-sleek-text max-w-[130px] sm:max-w-[110px]"
-                                  id={`mobile-datetime-input-${log.id}`}
-                                />
-                                <div className="flex gap-0.5">
-                                  <button
-                                    onClick={() => saveDateTimeEdit(log.id)}
-                                    className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-md transition-colors cursor-pointer"
-                                    title="Salva"
-                                  >
-                                    <Check className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    onClick={() => setEditingLogId(null)}
-                                    className="p-1 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-md transition-colors cursor-pointer"
-                                    title="Annulla"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <span 
-                                onClick={() => startEditingDateTime(log)}
-                                className="text-sleek-text-muted font-bold hover:text-sleek-accent cursor-pointer transition-colors border-b border-dashed border-pink-200 hover:border-sleek-accent leading-none inline-block text-[11px]"
-                                title="Modifica Orario"
-                                id={`mobile-display-time-${log.id}`}
+                          {/* Date selection & Reminder Toggle */}
+                          <div className="flex items-center gap-2 text-[11px] shrink-0">
+                            {activity && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onToggleReminder(log);
+                                }}
+                                className="mr-1 focus:outline-none cursor-pointer"
+                                id={`toggle-reminder-btn-logs-${log.id}`}
+                                title={log.reminderEnabled ? "Disattiva promemoria" : "Attiva promemoria"}
                               >
-                                {formatItalianDate(log.timestamp)}
-                              </span>
+                                {/* Modern iOS-style capsule toggle switch, no text */}
+                                <div className={`w-8 h-5 rounded-full p-0.5 transition-all duration-300 border flex items-center ${
+                                  log.reminderEnabled 
+                                    ? "bg-gradient-to-r from-pink-500 to-rose-450 border-pink-400 shadow-sm shadow-pink-200/50" 
+                                    : "bg-slate-200 border-slate-300 shadow-inner"
+                                }`}>
+                                  <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${
+                                    log.reminderEnabled ? "translate-x-3.5" : "translate-x-0"
+                                  }`} />
+                                </div>
+                              </button>
                             )}
-                          </div>
 
-                          {/* Notes field */}
-                          <div className="flex-1 max-w-[55%]">
-                            <input
-                              type="text"
-                              value={log.notes}
-                              onChange={(e) => handleNoteChange(log.id, e.target.value)}
-                              placeholder="Nota..."
-                              className="w-full px-2 py-1 text-base sm:text-xs font-bold rounded-lg bg-pink-50/15 border border-pink-100/50 hover:border-pink-200 focus:border-sleek-accent/40 focus:bg-white focus:outline-none text-right text-sleek-text placeholder-pink-700/30 transition-all"
-                              id={`mobile-notes-input-${log.id}`}
-                            />
+                            <div className="flex flex-col gap-0.5">
+                              {isEditingTime ? (
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="datetime-local"
+                                    value={tempDateTime}
+                                    onChange={(e) => setTempDateTime(e.target.value)}
+                                    className="px-1.5 py-1 rounded-md border border-pink-200 text-base sm:text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-sleek-accent bg-white text-sleek-text max-w-[130px] sm:max-w-[110px]"
+                                    id={`mobile-datetime-input-${log.id}`}
+                                  />
+                                  <div className="flex gap-0.5">
+                                    <button
+                                      onClick={() => saveDateTimeEdit(log.id)}
+                                      className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-md transition-colors cursor-pointer"
+                                      title="Salva"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingLogId(null)}
+                                      className="p-1 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-md transition-colors cursor-pointer"
+                                      title="Annulla"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <span 
+                                    onClick={() => startEditingDateTime(log)}
+                                    className="text-sleek-text-muted font-bold hover:text-sleek-accent cursor-pointer transition-colors border-b border-dashed border-pink-200 hover:border-sleek-accent leading-none inline-block text-[11px]"
+                                    title="Modifica Orario"
+                                    id={`mobile-display-time-${log.id}`}
+                                  >
+                                    {formatItalianDate(log.timestamp)}
+                                  </span>
+                                  {log.reminderEnabled && log.reminderDate && (
+                                    <div 
+                                      onClick={() => onEditReminder?.(log)}
+                                      className="flex items-center gap-1 mt-0.5 text-[9px] font-black text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-100/60 px-1.5 py-0.5 rounded-md w-fit font-sans animate-pulse cursor-pointer transition-all hover:scale-102 active:scale-98"
+                                      title="Clicca per modificare la scadenza"
+                                    >
+                                      <Bell className="w-2.5 h-2.5" />
+                                      <span>Scadenza: {formatItalianDateOnly(log.reminderDate)}</span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
+                        </div>
+
+                        {/* Row 3: Notes field (always taking full width below) */}
+                        <div className="mt-2.5 pt-2 border-t border-dashed border-pink-50/45">
+                          <input
+                            type="text"
+                            value={log.notes}
+                            onChange={(e) => handleNoteChange(log.id, e.target.value)}
+                            placeholder="Aggiungi una nota..."
+                            className="w-full px-3 py-1.5 text-[11px] sm:text-[10px] font-bold rounded-lg bg-pink-50/15 border border-pink-100/30 hover:border-pink-200 focus:border-sleek-accent/40 focus:bg-white focus:outline-none text-left text-sleek-text placeholder-pink-700/30 transition-all font-sans"
+                            id={`mobile-notes-input-${log.id}`}
+                          />
                         </div>
                       </motion.div>
                     </React.Fragment>

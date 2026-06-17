@@ -20,7 +20,7 @@ export default function ActivityForm({
   const [selectedIcon, setSelectedIcon] = useState("Smile");
   const [selectedColor, setSelectedColor] = useState("rose");
   const [iconSearchQuery, setIconSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit">("all");
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit" | "business">("all");
 
   useEffect(() => {
     if (activityToEdit) {
@@ -179,6 +179,7 @@ export default function ActivityForm({
               <div className="flex gap-1.5 p-1 bg-pink-100/10 border border-pink-100/30 rounded-xl overflow-x-auto whitespace-nowrap scrollbar-none select-none" id="icon-category-tabs">
                 {[
                   { id: "all", label: "Tutte" },
+                  { id: "business", label: "Business 💼" },
                   { id: "summer", label: "Estate ☀️" },
                   { id: "dance", label: "Ballo 💃" },
                   { id: "faces", label: "Faccine 😄" },
@@ -211,11 +212,11 @@ export default function ActivityForm({
                 {filteredIcons.length > 0 ? (
                   // Uses a double row height-capped layout so items scroll horizontally neatly
                   <div className="flex flex-col flex-wrap h-[155px] overflow-x-auto gap-3 pb-2 scrollbar-thin snap-x px-0.5">
-                    {filteredIcons.map((icon) => {
+                    {filteredIcons.map((icon, idx) => {
                       const isSelected = selectedIcon === icon.name;
                       return (
                         <button
-                          key={icon.name}
+                          key={`${icon.category}-${icon.name}-${idx}`}
                           type="button"
                           onClick={() => setSelectedIcon(icon.name)}
                           className={`w-14 h-14 shrink-0 rounded-[18px] flex flex-col items-center justify-center transition-all snap-start cursor-pointer border ${
@@ -224,7 +225,7 @@ export default function ActivityForm({
                               : "bg-white border-pink-100/50 hover:border-pink-200 text-slate-500 hover:text-pink-600"
                           }`}
                           title={icon.label}
-                          id={`icon-select-${icon.name}`}
+                          id={`icon-select-${icon.category}-${icon.name}-${idx}`}
                         >
                           <IconRenderer name={icon.name} className="w-6.5 h-6.5 stroke-[1.6]" />
                           <span className="text-[8px] mt-1 text-center truncate w-full px-0.5 text-slate-400 font-bold" title={ICON_TRANSLATIONS[icon.name] || icon.name}>

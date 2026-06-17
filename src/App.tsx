@@ -6,6 +6,8 @@ import ActivityLogList from "./components/ActivityLogList";
 import ActivityForm from "./components/ActivityForm";
 import ConfirmModal from "./components/ConfirmModal";
 import LoginScreen from "./components/LoginScreen";
+import ReminderModal from "./components/ReminderModal";
+import NotificationModal from "./components/NotificationModal";
 import { auth, db, handleFirestoreError, OperationType } from "./lib/firebase";
 import { onAuthStateChanged, signOut, deleteUser, User } from "firebase/auth";
 import { 
@@ -129,6 +131,151 @@ export default function App() {
 
   // Notification Toast State
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+
+  // Reminder and Notification States
+  const [reminderModalLog, setReminderModalLog] = useState<ActivityLog | null>(null);
+  const [activeNotificationLog, setActiveNotificationLog] = useState<ActivityLog | null>(null);
+
+  // Toggle Reminder button logic
+  const handleToggleReminderClick = async (log: ActivityLog) => {
+    if (!user) return;
+    
+    if (log.reminderEnabled) {
+      // Toggle OFF
+      const updated = logs.map((l) =>
+        l.id === log.id ? { ...l, reminderEnabled: false, reminderDate: "" } : l
+      );
+      setLogs(updated);
+      
+      const logPath = `users/${user.uid}/logs/${log.id}`;
+      try {
+        await updateDoc(doc(db, "users", user.uid, "logs", log.id), {
+          reminderEnabled: false,
+          reminderDate: ""
+        });
+        showToast(`Notifica per "${log.activityName}" disattivata.`, "info");
+      } catch (e) {
+        handleFirestoreError(e, OperationType.UPDATE, logPath);
+      }
+    } else {
+      // Toggle ON -> Open Calendar Scheduler Modal
+      setReminderModalLog(log);
+    }
+  };
+
+  const handleSaveReminder = async (dateIso: string) => {
+    if (!user || !reminderModalLog) return;
+
+    const targetLog = reminderModalLog;
+    const updated = logs.map((l) =>
+      l.id === targetLog.id ? { ...l, reminderEnabled: true, reminderDate: dateIso } : l
+    );
+    setLogs(updated);
+    setReminderModalLog(null);
+
+    const logPath = `users/${user.uid}/logs/${targetLog.id}`;
+    try {
+      await updateDoc(doc(db, "users", user.uid, "logs", targetLog.id), {
+        reminderEnabled: true,
+        reminderDate: dateIso
+      });
+      showToast(`Notifica per "${targetLog.activityName}" programmata con successo!`, "success");
+      playSuccessSound();
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, logPath);
+    }
+  };
+
+  const handleSnoozeReminderLog = async () => {
+    if (!user || !activeNotificationLog) return;
+
+    const targetLog = activeNotificationLog;
+    setActiveNotificationLog(null);
+
+    const snoozeTime = new Date();
+    snoozeTime.setMinutes(snoozeTime.getMinutes() + 10);
+    const snoozeDateIso = snoozeTime.toISOString();
+
+    const updated = logs.map((l) =>
+      l.id === targetLog.id ? { ...l, reminderEnabled: true, reminderDate: snoozeDateIso } : l
+    );
+    setLogs(updated);
+
+    const logPath = `users/${user.uid}/logs/${targetLog.id}`;
+    try {
+      await updateDoc(doc(db, "users", user.uid, "logs", targetLog.id), {
+        reminderEnabled: true,
+        reminderDate: snoozeDateIso
+      });
+      showToast(`Notifica per "${targetLog.activityName}" posticipata di 10 minuti.`, "info");
+      playSuccessSound();
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, logPath);
+    }
+  };
+
+  const handleDismissReminderLog = async () => {
+    if (!user || !activeNotificationLog) return;
+
+    const targetLog = activeNotificationLog;
+    setActiveNotificationLog(null);
+
+    const updated = logs.map((l) =>
+      l.id === targetLog.id ? { ...l, reminderEnabled: false, reminderDate: "" } : l
+    );
+    setLogs(updated);
+
+    const logPath = `users/${user.uid}/logs/${targetLog.id}`;
+    try {
+      await updateDoc(doc(db, "users", user.uid, "logs", targetLog.id), {
+        reminderEnabled: false,
+        reminderDate: ""
+      });
+      showToast(`Notifica per "${targetLog.activityName}" disattivata.`, "info");
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, logPath);
+    }
+  };
+
+  // Periodically check for active notifications
+  useEffect(() => {
+    if (!user || logs.length === 0) return;
+
+    const interval = setInterval(() => {
+      // Avoid executing checks or triggering updates if the tab is hidden / in standby mode to save battery & prevent background refreshes
+      if (typeof document !== "undefined" && document.hidden) return;
+
+      const now = new Date();
+      const expiredLog = logs.find((l) => {
+        if (l.reminderEnabled && l.reminderDate) {
+          const remTime = new Date(l.reminderDate).getTime();
+          return remTime <= now.getTime();
+        }
+        return false;
+      });
+
+      if (expiredLog) {
+        setActiveNotificationLog(expiredLog);
+        playSuccessSound();
+
+        // Turn OFF local state
+        const updated = logs.map((l) =>
+          l.id === expiredLog.id ? { ...l, reminderEnabled: false } : l
+        );
+        setLogs(updated);
+
+        // Turn OFF on Firestore
+        const logPath = `users/${user.uid}/logs/${expiredLog.id}`;
+        updateDoc(doc(db, "users", user.uid, "logs", expiredLog.id), {
+          reminderEnabled: false
+        }).catch((err) => {
+          console.warn("Failed to deactivate fired reminder on Firestore:", err);
+        });
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [logs, user]);
 
   // Monitor firebase authentication status with protective timeout safety-net
   useEffect(() => {
@@ -619,7 +766,7 @@ export default function App() {
               }`}>
                 Diario delle Attività
               </h1>
-              <p className="text-pink-500/80 flex items-center gap-1 font-bold transition-all duration-300">
+              <p className="text-pink-500/80 flex items-center gap-1 font-bold transition-all duration-350">
                 <UserIcon className={`text-pink-500 transition-all duration-300 ${
                   shrinkLogo ? "w-2.5 h-2.5" : "w-3 h-3"
                 }`} />
@@ -629,6 +776,13 @@ export default function App() {
                   Account: {user.displayName || user.email}
                 </span>
               </p>
+              {user.email && (
+                <span className={`text-pink-500/60 font-medium lowercase transition-all block ${
+                  shrinkLogo ? "text-[8px] pl-3.5" : "text-[9px] pl-4"
+                }`}>
+                  {user.email}
+                </span>
+              )}
             </div>
           </div>
 
@@ -706,8 +860,11 @@ export default function App() {
         <section className="space-y-3">
           <ActivityLogList
             logs={logs}
+            activities={activities}
             onUpdateLog={handleUpdateLog}
             onDeleteLog={handleDeleteLog}
+            onToggleReminder={handleToggleReminderClick}
+            onEditReminder={setReminderModalLog}
           />
         </section>
       </main>
@@ -824,6 +981,30 @@ export default function App() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reminder Configuration Modal */}
+      <AnimatePresence>
+        {reminderModalLog && (
+          <ReminderModal
+            log={reminderModalLog}
+            activity={activities.find((a) => a.id === reminderModalLog.activityId) || activities[0]}
+            onClose={() => setReminderModalLog(null)}
+            onConfirm={handleSaveReminder}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Active Expiry Reminder Prompt Alert Modal */}
+      <AnimatePresence>
+        {activeNotificationLog && (
+          <NotificationModal
+            log={activeNotificationLog}
+            activity={activities.find((a) => a.id === activeNotificationLog.activityId) || activities[0]}
+            onSnooze={handleSnoozeReminderLog}
+            onDismiss={handleDismissReminderLog}
+          />
         )}
       </AnimatePresence>
  

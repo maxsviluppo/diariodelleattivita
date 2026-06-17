@@ -9,7 +9,9 @@
         "name": { "type": "string" },
         "iconName": { "type": "string" },
         "color": { "type": "string" },
-        "isCustom": { "type": "boolean" }
+        "isCustom": { "type": "boolean" },
+        "reminderEnabled": { "type": "boolean" },
+        "reminderDate": { "type": "string" }
       },
       "required": ["id", "name", "iconName", "color", "isCustom"]
     },
@@ -25,7 +27,9 @@
         "color": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
         "dateTimeStr": { "type": "string" },
-        "notes": { "type": "string" }
+        "notes": { "type": "string" },
+        "reminderEnabled": { "type": "boolean" },
+        "reminderDate": { "type": "string" }
       },
       "required": ["id", "activityId", "activityName", "iconName", "color", "timestamp", "dateTimeStr", "notes"]
     }

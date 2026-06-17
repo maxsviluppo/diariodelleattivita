@@ -88,92 +88,47 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         setErrorMsg(
           <div className="text-emerald-700 font-black text-xs text-center py-1 flex items-center justify-center gap-1.5 min-h-[30px]" id="auth-register-success-indicator">
             <span className="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-            Registrazione completata! Accesso automatico al Diario...
+            Registrazione completata! Accesso in corso...
           </div>
         );
         setTimeout(() => {
           onLoginSuccess();
         }, 1200);
       } else {
-        // Intelligent Login flow with automatic fallback
-        try {
-          await signInWithEmailAndPassword(auth, email.trim(), password);
-          setErrorMsg(
-            <div className="text-emerald-700 font-black text-xs text-center py-1 flex items-center justify-center gap-1.5 min-h-[30px]" id="auth-login-success-indicator">
-              <span className="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-              Accesso riuscito! Caricamento in corso...
-            </div>
-          );
-          setTimeout(() => {
-            onLoginSuccess();
-          }, 800);
-        } catch (err: any) {
-          console.warn("Attempt login failed, checking auto-registration fallback:", err.code || err.message);
-          
-          if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") {
-            // "se utente non registrato passa automaticamente alla registrazione"
-            const suggestedName = email.split("@")[0];
-            setName(suggestedName);
-            setIsRegister(true);
-            
-            setErrorMsg(
-              <div className="text-pink-800 text-[11px] font-bold text-center py-1">
-                Utente non registrato. Attivazione registrazione automatica...
-              </div>
-            );
-
-            // Trigger registration under the hood
-            setTimeout(async () => {
-              try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-                await updateProfile(userCredential.user, {
-                  displayName: suggestedName
-                });
-                
-                setErrorMsg(
-                  <div className="text-emerald-700 font-black text-xs text-center py-1 flex items-center justify-center gap-1.5 min-h-[30px]" id="auth-auto-success-indicator">
-                    <span className="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-                    Registrazione completata! Caricamento delle attività in corso...
-                  </div>
-                );
-                setTimeout(() => {
-                  onLoginSuccess();
-                }, 1200);
-              } catch (regErr: any) {
-                console.warn("Auto-register fallback exception:", regErr.code || regErr.message, regErr);
-                if (regErr.code === "auth/email-already-in-use") {
-                  // The email exists, so they typed the wrong password instead of wanting registration
-                  setIsRegister(false);
-                  setErrorMsg("La password inserita non è corretta per questo account esistente.");
-                } else if (regErr.code === "auth/operation-not-allowed") {
-                  setErrorMsg(getOperationNotAllowedUI());
-                } else {
-                  setErrorMsg("Errore durante la registrazione automatica: " + (regErr.message || "Riprova."));
-                }
-              }
-            }, 1000);
-          } else if (err.code === "auth/operation-not-allowed") {
-            setErrorMsg(getOperationNotAllowedUI());
-          } else if (err.code === "auth/invalid-email") {
-            setErrorMsg("L'indirizzo email inserito non è valido.");
-          } else {
-            setErrorMsg("Errore durante l'accesso: " + (err.message || "Riprova."));
-          }
-        }
+        // Explicit Predictable Login flow
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+        setErrorMsg(
+          <div className="text-emerald-700 font-black text-xs text-center py-1 flex items-center justify-center gap-1.5 min-h-[30px]" id="auth-login-success-indicator">
+            <span className="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+            Accesso riuscito! Caricamento in corso...
+          </div>
+        );
+        setTimeout(() => {
+          onLoginSuccess();
+        }, 800);
       }
     } catch (err: any) {
       console.warn("Auth helper warning:", err.code || err.message, err);
       if (err.code === "auth/email-already-in-use") {
-        setIsRegister(false);
-        setErrorMsg("Questo indirizzo email è già registrato. Se hai già un account, inserisci la password corretta per accedere.");
+        setErrorMsg("Questo indirizzo email è già registrato. Accedi con le tue credenziali oppure usa un'altra email.");
+      } else if (err.code === "auth/user-not-found") {
+        setErrorMsg("Indirizzo email non registrato. Clicca su 'Registrati' per creare un account.");
+      } else if (err.code === "auth/wrong-password") {
+        setErrorMsg("La password inserita non è corretta.");
+      } else if (err.code === "auth/invalid-credential") {
+        setErrorMsg("Credenziali non valide. Verifica l'indirizzo email e la password inseriti.");
+      } else if (err.code === "auth/weak-password") {
+        setErrorMsg("La password deve contenere almeno 6 caratteri.");
       } else if (err.code === "auth/operation-not-allowed") {
         setErrorMsg(getOperationNotAllowedUI());
       } else if (err.code === "auth/invalid-email") {
         setErrorMsg("L'indirizzo email inserito non è valido.");
+      } else if (err.code === "auth/too-many-requests") {
+        setErrorMsg("Troppi tentativi falliti. L'accesso per questo account è temporaneamente disabilitato. Riprova più tardi.");
       } else if (err.message && err.message.includes("apiKey")) {
-        setErrorMsg("Configurazione Firebase non ancora attiva nel cloud. Si prega di ricaricare la pagina o effettuare l'accesso più tardi.");
+        setErrorMsg("Configurazione Firebase non ancora attiva nel cloud. Ricarica la pagina o riprova più tardi.");
       } else {
-        setErrorMsg("Si è verificato un errore durante la registrazione: " + (err.message || "Riprova."));
+        setErrorMsg(`Si è verificato un errore: ${err.message || "Riprova."}`);
       }
     } finally {
       setIsLoading(false);

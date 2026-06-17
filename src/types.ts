@@ -4,6 +4,8 @@ export interface Activity {
   iconName: string; // Key corresponding to registered Lucide icons
   color: string;    // Tailwind color class prefix e.g. "rose", "emerald", "amber"
   isCustom: boolean;
+  reminderEnabled?: boolean;
+  reminderDate?: string; // ISO date string
 }
 
 export interface ActivityLog {
@@ -15,10 +17,12 @@ export interface ActivityLog {
   timestamp: string;    // ISO date string e.g. "2026-06-02T22:49:52Z"
   dateTimeStr: string;   // Localized editable date representation e.g. "2026-06-02T23:50" (for input type="datetime-local")
   notes: string;
+  reminderEnabled?: boolean;
+  reminderDate?: string; // ISO date string
 }
 
 export interface PresetIcon {
   name: string;
   label: string;
-  category?: "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit";
+  category?: "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit" | "business";
 }

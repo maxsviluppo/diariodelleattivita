@@ -3,7 +3,7 @@ import { Activity, ActivityLog } from "../types";
 import { PASTEL_COLORS } from "../data";
 import IconRenderer from "./IconRenderer";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Edit3, Trash2, Settings, Check, ChevronDown, ChevronUp, Search, X, Sparkles, SlidersHorizontal, BarChart } from "lucide-react";
+import { Plus, Edit3, Trash2, Settings, Check, ChevronDown, ChevronUp, Search, X, Sparkles, SlidersHorizontal, BarChart, Bell } from "lucide-react";
 
 interface ActivityGridProps {
   activities: Activity[];

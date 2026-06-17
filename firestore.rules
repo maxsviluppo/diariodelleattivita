@@ -35,7 +35,9 @@ service cloud.firestore {
         && data.name is string && data.name.size() > 0 && data.name.size() <= 100
         && data.iconName is string && data.iconName.size() <= 100
         && data.color is string && data.color.size() <= 50
-        && data.isCustom is bool;
+        && data.isCustom is bool
+        && (!('reminderEnabled' in data) || data.reminderEnabled is bool)
+        && (!('reminderDate' in data) || data.reminderDate is string);
     }
 
     function isValidActivityLog(data) {
@@ -46,7 +48,9 @@ service cloud.firestore {
         && data.color is string && data.color.size() <= 50
         && data.timestamp is string && data.timestamp.size() <= 50
         && data.dateTimeStr is string && data.dateTimeStr.size() <= 50
-        && data.notes is string && data.notes.size() <= 5000;
+        && data.notes is string && data.notes.size() <= 5000
+        && (!('reminderEnabled' in data) || data.reminderEnabled is bool)
+        && (!('reminderDate' in data) || data.reminderDate is string);
     }
 
     // Route matches
@@ -63,7 +67,7 @@ service cloud.firestore {
           && isValidId(activityId)
           && isValidActivity(incoming())
           && (
-            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'iconName', 'color'])
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'iconName', 'color', 'reminderEnabled', 'reminderDate'])
           );
         allow delete: if isOwner(userId);
       }
@@ -78,7 +82,10 @@ service cloud.firestore {
           && isValidId(logId)
           && isValidActivityLog(incoming())
           && (
-            incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'dateTimeStr', 'timestamp'])
+            // Action: Edit log details or timer/reminder
+            incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'dateTimeStr', 'timestamp', 'reminderEnabled', 'reminderDate']) ||
+            // Action: Cascade parent activity metadata update
+            incoming().diff(existing()).affectedKeys().hasOnly(['activityName', 'iconName', 'color'])
           );
         allow delete: if isOwner(userId);
       }
