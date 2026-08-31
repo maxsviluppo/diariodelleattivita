@@ -20,7 +20,7 @@ export default function ActivityForm({
   const [selectedIcon, setSelectedIcon] = useState("Smile");
   const [selectedColor, setSelectedColor] = useState("rose");
   const [iconSearchQuery, setIconSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit" | "business">("all");
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit" | "business" | "medical" | "auto">("all");
 
   useEffect(() => {
     if (activityToEdit) {
@@ -180,6 +180,8 @@ export default function ActivityForm({
                 {[
                   { id: "all", label: "Tutte" },
                   { id: "business", label: "Business 💼" },
+                  { id: "medical", label: "Sanità 🏥" },
+                  { id: "auto", label: "Auto 🚗" },
                   { id: "summer", label: "Estate ☀️" },
                   { id: "dance", label: "Ballo 💃" },
                   { id: "faces", label: "Faccine 😄" },

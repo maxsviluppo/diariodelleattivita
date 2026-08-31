@@ -24,5 +24,5 @@ export interface ActivityLog {
 export interface PresetIcon {
   name: string;
   label: string;
-  category?: "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit" | "business";
+  category?: "summer" | "dance" | "general" | "faces" | "kids" | "babies" | "travel" | "transit" | "business" | "medical" | "auto";
 }

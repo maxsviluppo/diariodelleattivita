@@ -397,7 +397,48 @@ export const ICON_TRANSLATIONS: Record<string, string> = {
   "SquareEuro": "Valuta Euro",
   "Store": "Negozio / Shop",
   "Tag": "Prezzo / Offerta",
-  "Tags": "Etichette Prezzi"
+  "Tags": "Etichette Prezzi",
+
+  // Sanità
+  "Pill": "Pillola / Farmaco",
+  "Syringe": "Vaccino / Iniezione",
+  "Hospital": "Ospedale / Ricovero",
+  "Ambulance": "Pronto soccorso / Emergenza",
+  "Scan": "Radiografia / TAC",
+  "ClipboardPlus": "Ricetta medica",
+  "BedDouble": "Degenza / Ricovero notturno",
+  "TestTubes": "Esami di laboratorio",
+  "Siren": "Urgenza sanitaria",
+
+  // Auto
+  "CarFront": "Automobile / Veicolo",
+  "CarTaxiFront": "Taxi / NCC",
+  "CircleParking": "Parcheggio auto",
+  "Gauge": "Controllo km / Cruscotto",
+  "TrafficCone": "Cantieri / Deviazione",
+  "KeyRound": "Chiavi auto / Noleggio",
+  "Cog": "Manutenzione programmata",
+  "ShieldAlert": "Multa / Infrazione",
+  "ParkingCircle": "Area sosta",
+  "Navigation": "Navigatore GPS",
+
+  // Business aggiuntive (pagamenti, fatture, rate)
+  "FileSpreadsheet": "Fattura / Foglio contabile",
+  "ScrollText": "Contratto / Atto commerciale",
+  "Repeat": "Rata / Pagamento ricorrente",
+  "CalendarClock": "Scadenza pagamento",
+  "ArrowLeftRight": "Bonifico / Giroconto",
+  "ClipboardList": "Nota spese",
+  "FileMinus": "Nota di credito",
+  "Contact": "Contatto cliente",
+  "Signature": "Firma documento",
+  "CircleArrowDown": "Uscita denaro",
+  "CircleArrowUp": "Incasso / Entrata",
+  "BanknoteArrowDown": "Pagamento contanti",
+  "HandHelping": "Finanziamento / Prestito",
+  "Replace": "Rimborso / Storno",
+  "RotateCw": "Rinnovo abbonamento",
+  "CalendarDays": "Piano rateizzato"
 };
 
 export const PASTEL_COLORS = [
@@ -858,7 +899,61 @@ export const PRESET_ICONS: PresetIcon[] = [
   { name: "SquareEuro", label: "Pulsante quadrato euro risorsa", category: "business" },
   { name: "Store", label: "Ponto vendita negozio fisico", category: "business" },
   { name: "Tag", label: "Cartellino prezzo o offerta", category: "business" },
-  { name: "Tags", label: "Etichette sconti o categorie", category: "business" }
+  { name: "Tags", label: "Etichette sconti o categorie", category: "business" },
+  { name: "FileSpreadsheet", label: "Fattura elettronica o foglio contabile", category: "business" },
+  { name: "ScrollText", label: "Contratto commerciale o atto notarile", category: "business" },
+  { name: "Repeat", label: "Rata mensile o pagamento ricorrente", category: "business" },
+  { name: "CalendarClock", label: "Scadenza fattura o pagamento", category: "business" },
+  { name: "ArrowLeftRight", label: "Bonifico bancario o giroconto", category: "business" },
+  { name: "ClipboardList", label: "Nota spese aziendale o rendicontazione", category: "business" },
+  { name: "FileMinus", label: "Nota di credito o storno fattura", category: "business" },
+  { name: "Contact", label: "Contatto cliente o rubrica commerciale", category: "business" },
+  { name: "Signature", label: "Firma contratto o documento digitale", category: "business" },
+  { name: "CircleArrowDown", label: "Uscita denaro o pagamento effettuato", category: "business" },
+  { name: "CircleArrowUp", label: "Incasso o entrata di denaro", category: "business" },
+  { name: "BanknoteArrowDown", label: "Pagamento in contanti uscita", category: "business" },
+  { name: "HandHelping", label: "Finanziamento o prestito bancario", category: "business" },
+  { name: "Replace", label: "Rimborso spese o storno operazione", category: "business" },
+  { name: "RotateCw", label: "Rinnovo abbonamento o servizio", category: "business" },
+  { name: "CalendarDays", label: "Piano rateizzato o calendario pagamenti", category: "business" },
+
+  // ==========================================
+  // --- 15 ICONE SANITÀ / MEDICHE ---
+  // ==========================================
+  { name: "Stethoscope", label: "Visita dal dottore / Medico di base", category: "medical" },
+  { name: "Pill", label: "Assunzione farmaci / Pillola", category: "medical" },
+  { name: "Syringe", label: "Vaccinazione o iniezione", category: "medical" },
+  { name: "Hospital", label: "Ospedale o ricovero", category: "medical" },
+  { name: "Ambulance", label: "Pronto soccorso / Emergenza sanitaria", category: "medical" },
+  { name: "Bandage", label: "Medicazione ferita / Cerotto", category: "medical" },
+  { name: "HeartPulse", label: "Controllo cardiaco / ECG", category: "medical" },
+  { name: "Thermometer", label: "Febbre / Misurazione temperatura", category: "medical" },
+  { name: "Microscope", label: "Analisi di laboratorio / Esami", category: "medical" },
+  { name: "Brain", label: "Neurologo / Psicologo / Mente", category: "medical" },
+  { name: "Eye", label: "Visita oculistica / Controllo vista", category: "medical" },
+  { name: "Activity", label: "Fisioterapia / Riabilitazione", category: "medical" },
+  { name: "Droplets", label: "Prelievo sangue / Analisi ematiche", category: "medical" },
+  { name: "Scan", label: "Radiografia / TAC / Diagnostica", category: "medical" },
+  { name: "ClipboardPlus", label: "Ricetta medica / Prescrizione", category: "medical" },
+
+  // ==========================================
+  // --- 15 ICONE AUTO / VEICOLI ---
+  // ==========================================
+  { name: "CarFront", label: "Automobile / Spostamento in auto", category: "auto" },
+  { name: "Fuel", label: "Rifornimento benzina / Carburante", category: "auto" },
+  { name: "Gauge", label: "Controllo chilometri / Cruscotto", category: "auto" },
+  { name: "Wrench", label: "Meccanico / Riparazione auto", category: "auto" },
+  { name: "ShieldCheck", label: "Assicurazione auto / Polizza RC", category: "auto" },
+  { name: "CircleParking", label: "Parcheggio auto / Area sosta", category: "auto" },
+  { name: "Navigation", label: "Navigatore GPS / Percorso", category: "auto" },
+  { name: "TrafficCone", label: "Cantieri stradali / Deviazione", category: "auto" },
+  { name: "KeyRound", label: "Noleggio auto / Chiavi veicolo", category: "auto" },
+  { name: "Zap", label: "Ricarica auto elettrica", category: "auto" },
+  { name: "Cog", label: "Manutenzione programmata / Tagliando", category: "auto" },
+  { name: "FileText", label: "Bollo auto / Tassa ACI", category: "auto" },
+  { name: "ScrollText", label: "Revisione auto / Documenti veicolo", category: "auto" },
+  { name: "ClipboardList", label: "Pratica ACI / Bollettino pagamento", category: "auto" },
+  { name: "ShieldAlert", label: "Multa stradale / Infrazione", category: "auto" }
 ];
 
 export const INITIAL_ACTIVITIES: Activity[] = [
